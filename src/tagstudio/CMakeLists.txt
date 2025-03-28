@@ -36,6 +36,7 @@ add_custom_command(
     COMMAND Python3::InterpreterMultiConfig
     "-m" "PyInstaller" "${CMAKE_SOURCE_DIR}/tagstudio.spec"
     "-y" "--distpath" ${CMAKE_BINARY_DIR} "--workpath" ${CMAKE_CURRENT_BINARY_DIR}
+    "--" "--cppready"
     COMMAND ${CMAKE_COMMAND} -E touch ${STAMP_FILE}
     OUTPUT ${STAMP_FILE})
 add_custom_target(TagStudio

@@ -8,7 +8,11 @@ from tomllib import load
 
 parser = ArgumentParser()
 parser.add_argument("--portable", action="store_true")
+parser.add_argument("--cppready", action="store_true")
 options = parser.parse_args()
+
+if options.portable and options.cppready:
+    raise Exception("Both portable and cppready specified.")
 
 with open("pyproject.toml", "rb") as file:
     pyproject = load(file)["project"]
@@ -28,6 +32,8 @@ datafiles = [
     ("src/tagstudio/qt/*.qrc", "tagstudio/qt"),
     ("src/tagstudio/resources", "tagstudio/resources"),
 ]
+if options.cppready:
+    datafiles += [("src/tagstudio/main.py", "tagstudio")]
 
 a = Analysis(
     ["src/tagstudio/main.py"],
@@ -39,11 +45,15 @@ a = Analysis(
     hooksconfig={},
     excludes=[],
     runtime_hooks=[],
-    noarchive=False,
+    noarchive=options.cppready,
     optimize=0,
 )
 
-pyz = PYZ(a.pure)
+# PyInstaller doesn't inject its bootstrapping scripts if there's not
+# at least one archive present in the executable.
+# Since we don't have a choice whether or not an exe is generated, we
+# might as well have it be functional..
+pyz = PYZ(a.pure if not options.cppready else [])
 
 include = [a.scripts]
 if options.portable:
@@ -77,6 +87,12 @@ coll = (
         exe,
         a.binaries,
         a.datas,
+        # 'a.scripts' just ends up being the hooks plus the user specified
+        # scripts to analyse.
+        # Since we manually get it as data in the tagstudio folder, there
+        # is no need for it.
+        #a.scripts if options.cppready else [],
+        a.pure if options.cppready else [],
         name=name,
         strip=False,
         upx=True,
