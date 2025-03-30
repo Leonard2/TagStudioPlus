@@ -36,4 +36,5 @@ execute_process(
 #]
 
 
+add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/src/tagstudioplus")
 add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/src/tagstudio")
