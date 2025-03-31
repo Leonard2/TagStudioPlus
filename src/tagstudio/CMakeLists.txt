@@ -42,6 +42,14 @@ add_custom_command(
     COMMAND ${CMAKE_COMMAND} -E rename "${CMAKE_BINARY_DIR}/TagStudio_python" "${CMAKE_BINARY_DIR}/bin"
     COMMAND ${CMAKE_COMMAND} -E touch "${STAMP_DIR}/1"
     OUTPUT "${STAMP_DIR}/1")
+if (WIN32)
+    list(APPEND FINAL_COMMAND
+        "-D" "GLOBEX=${CMAKE_BINARY_DIR}/bin/_internal/*.dll"
+        "-D" "DIR=${CMAKE_BINARY_DIR}/bin/"
+        "-P" "${CMAKE_SOURCE_DIR}/cmake/GlobMove.cmake")
+else()
+    list(APPEND FINAL_COMMAND "-E" "true")
+endif()
 add_custom_command(
     VERBATIM
     USES_TERMINAL
@@ -49,6 +57,7 @@ add_custom_command(
     WORKING_DIRECTORY "${CMAKE_BINARY_DIR}/bin/_internal"
     COMMAND ${CMAKE_COMMAND} -E tar xv "base_library.zip"
     COMMAND ${CMAKE_COMMAND} -E rm -r "base_library.zip"
+    COMMAND ${CMAKE_COMMAND} ${FINAL_COMMAND}
     COMMAND ${CMAKE_COMMAND} -E touch "${STAMP_DIR}/2"
     OUTPUT "${STAMP_DIR}/2")
 add_custom_target(TagStudio

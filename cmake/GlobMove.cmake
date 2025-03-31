@@ -1,0 +1,5 @@
+file(GLOB RESULTS ${GLOBEX})
+foreach(SRC ${RESULTS})
+    cmake_path(GET SRC FILENAME DST)
+    file(RENAME ${SRC} "${DIR}/${DST}")
+endforeach()
