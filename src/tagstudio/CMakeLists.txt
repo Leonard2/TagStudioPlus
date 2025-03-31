@@ -43,6 +43,21 @@ add_custom_command(
     COMMAND ${CMAKE_COMMAND} -E copy_directory "${CMAKE_CURRENT_BINARY_DIR}/dist/TagStudio" "${CMAKE_BINARY_DIR}/bin"
     COMMAND ${CMAKE_COMMAND} -E touch "${STAMP_DIR}/1"
     OUTPUT "${STAMP_DIR}/1")
+if (WIN32)
+    list(APPEND DLL_COMMAND_1
+        "-D" "GLOBEX=${CMAKE_BINARY_DIR}/bin/_internal/*.dll"
+        "-D" "DIR=${CMAKE_BINARY_DIR}/bin/"
+        "-P" "${CMAKE_SOURCE_DIR}/cmake/GlobMove.cmake")
+    # Make an exception for the non-stable-interface module as the PyInstaller
+    # executable needs it and explicitly looks for it on startup.
+    list(APPEND DLL_COMMAND_2
+        -E copy
+        "${CMAKE_BINARY_DIR}/bin/$<TARGET_FILE_NAME:Python3::Module>"
+        "${CMAKE_BINARY_DIR}/bin/_internal")
+else()
+    list(APPEND DLL_COMMAND_1 "-E" "true")
+    list(APPEND DLL_COMMAND_2 "-E" "true")
+endif()
 add_custom_command(
     VERBATIM
     USES_TERMINAL
@@ -50,6 +65,8 @@ add_custom_command(
     WORKING_DIRECTORY "${CMAKE_BINARY_DIR}/bin/_internal"
     COMMAND ${CMAKE_COMMAND} -E tar xv "base_library.zip"
     COMMAND ${CMAKE_COMMAND} -E rm -r "base_library.zip"
+    COMMAND ${CMAKE_COMMAND} ${DLL_COMMAND_1}
+    COMMAND ${CMAKE_COMMAND} ${DLL_COMMAND_2}
     COMMAND ${CMAKE_COMMAND} -E touch "${STAMP_DIR}/2"
     OUTPUT "${STAMP_DIR}/2")
 add_custom_target(TagStudio
