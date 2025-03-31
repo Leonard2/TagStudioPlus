@@ -31,6 +31,7 @@ set(STAMP_DIR "${CMAKE_CURRENT_BINARY_DIR}/pymodule_stamp")
 # Note: PyInstaller seems to be unable to handle a debug Python.
 add_custom_command(
     VERBATIM
+    USES_TERMINAL
     DEPENDS ${PYMODULE_SRC}
     WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
     COMMAND Python3::InterpreterMultiConfig
@@ -43,6 +44,7 @@ add_custom_command(
     OUTPUT "${STAMP_DIR}/1")
 add_custom_command(
     VERBATIM
+    USES_TERMINAL
     DEPENDS "${STAMP_DIR}/1"
     WORKING_DIRECTORY "${CMAKE_BINARY_DIR}/bin/_internal"
     COMMAND ${CMAKE_COMMAND} -E tar xv "base_library.zip"
