@@ -39,7 +39,7 @@ add_custom_command(
     "-y" "--distpath" ${CMAKE_BINARY_DIR} "--workpath" ${CMAKE_CURRENT_BINARY_DIR}
     "--" "--cppready"
     COMMAND ${CMAKE_COMMAND} -E rm -rf "${CMAKE_BINARY_DIR}/bin"
-    COMMAND ${CMAKE_COMMAND} -E rename "${CMAKE_BINARY_DIR}/TagStudio_python" "${CMAKE_BINARY_DIR}/bin"
+    COMMAND ${CMAKE_COMMAND} -E rename "${CMAKE_BINARY_DIR}/TagStudio" "${CMAKE_BINARY_DIR}/bin"
     COMMAND ${CMAKE_COMMAND} -E touch "${STAMP_DIR}/1"
     OUTPUT "${STAMP_DIR}/1")
 add_custom_command(

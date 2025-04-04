@@ -26,9 +26,6 @@ if system == "Windows":
 elif system == "Darwin":
     icon = "src/tagstudio/resources/icon.icns"
 
-if options.cppready:
-    name += '_python'
-
 
 datafiles = [
     ("src/tagstudio/qt/*.json", "tagstudio/qt"),
