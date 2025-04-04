@@ -36,10 +36,11 @@ add_custom_command(
     WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
     COMMAND Python3::InterpreterMultiConfig
     "-m" "PyInstaller" "${CMAKE_SOURCE_DIR}/tagstudio.spec"
-    "-y" "--distpath" ${CMAKE_BINARY_DIR} "--workpath" ${CMAKE_CURRENT_BINARY_DIR}
-    "--" "--cppready"
-    COMMAND ${CMAKE_COMMAND} -E rm -rf "${CMAKE_BINARY_DIR}/bin"
-    COMMAND ${CMAKE_COMMAND} -E rename "${CMAKE_BINARY_DIR}/TagStudio" "${CMAKE_BINARY_DIR}/bin"
+    "--distpath" "${CMAKE_CURRENT_BINARY_DIR}/dist"
+    "--workpath" ${CMAKE_CURRENT_BINARY_DIR}
+    "-y" "--" "--cppready"
+    COMMAND ${CMAKE_COMMAND} -E rm -rf "${CMAKE_BINARY_DIR}/bin/_internal"
+    COMMAND ${CMAKE_COMMAND} -E copy_directory "${CMAKE_CURRENT_BINARY_DIR}/dist/TagStudio" "${CMAKE_BINARY_DIR}/bin"
     COMMAND ${CMAKE_COMMAND} -E touch "${STAMP_DIR}/1"
     OUTPUT "${STAMP_DIR}/1")
 add_custom_command(
