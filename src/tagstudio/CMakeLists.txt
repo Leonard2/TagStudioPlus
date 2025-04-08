@@ -27,6 +27,7 @@ if (NOT DEFINED NO_PYTHON_DEVTOOLS)
 endif()
 
 file(GLOB_RECURSE PYMODULE_SRC CONFIGURE_DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/*")
+list(APPEND PYMODULE_SRC "${CMAKE_SOURCE_DIR}/tagstudio.spec")
 set(STAMP_DIR "${CMAKE_CURRENT_BINARY_DIR}/pymodule_stamp")
 # Note: PyInstaller seems to be unable to handle a debug Python.
 add_custom_command(
