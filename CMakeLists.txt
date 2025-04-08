@@ -10,12 +10,11 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_PYENV "${CMAKE_CURRENT_SOURCE_DIR}/python_env")
 add_subdirectory(${CMAKE_PYENV})
 set(ENV{VIRTUAL_ENV} "${CMAKE_PYENV}")
-set(Python3_FIND_VIRTUALENV FIRST)
+set(Python3_FIND_VIRTUALENV ONLY)
 
-# Note: for now -DPython3_SABI_LIBRARY seems to UTTERLY fail on windows.
-# TODO: Look into it, because the stable ABI is obviously the better option.
 set(Python3_EXECUTABLE "")
-find_package(Python3 3.12 REQUIRED COMPONENTS Interpreter Development)
+set(Python3_ROOT_DIR "")
+find_package(Python3 3.12 REQUIRED COMPONENTS Interpreter)
 
 # Install base Python modules (PySide is needed to configure CMake).
 execute_process(
