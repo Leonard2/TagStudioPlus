@@ -35,6 +35,7 @@ add_custom_command(
     USES_TERMINAL
     DEPENDS ${PYMODULE_SRC}
     WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+    COMMAND ${CMAKE_COMMAND} -E touch "${CMAKE_CURRENT_SOURCE_DIR}/main.py"
     COMMAND Python3::InterpreterMultiConfig
     "-m" "PyInstaller" "${CMAKE_SOURCE_DIR}/tagstudio.spec"
     "--distpath" "${CMAKE_CURRENT_BINARY_DIR}/dist"
