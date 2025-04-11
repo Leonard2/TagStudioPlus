@@ -63,7 +63,7 @@ for i, (flag, (_, _, description)) in enumerate(options.items()):
 usage = f"""
 Utility to determine various Python config options for CMake projects.
 
-Usage: pyside_config.py [option]
+Usage: python_cmake_config.py [option]
 Options:
 {options_usage}
 """

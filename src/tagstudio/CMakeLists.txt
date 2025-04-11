@@ -1,29 +1,17 @@
 project(TagStudio)
 
+include(${CMAKE_SOURCE_DIR}/cmake/PythonCMakeConfig.cmake)
+
 
 # Install modules necessary for running the python app.
-execute_process(
-    COMMAND "${Python3_EXECUTABLE}" "${CMAKE_SOURCE_DIR}/cmake/python_cmake_config.py" "--python-project-dependencies"
-    OUTPUT_VARIABLE CMAKE_PYENV_DEPENDENCIES
-    OUTPUT_STRIP_TRAILING_WHITESPACE
-    WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
-    COMMAND_ERROR_IS_FATAL ANY)
+python_query_config(CMAKE_PYENV_DEPENDENCIES "--python-project-dependencies")
 # We need to remove this entry to avoid conflicting with self-built PySide (if used).
 list(FILTER CMAKE_PYENV_DEPENDENCIES EXCLUDE REGEX "PySide6*")
-execute_process(
-    COMMAND "${Python3_EXECUTABLE}" -m pip install ${CMAKE_PYENV_DEPENDENCIES}
-    COMMAND_ERROR_IS_FATAL ANY)
+python_pip_install(${CMAKE_PYENV_DEPENDENCIES})
 # Install development python modules.
 if (NOT DEFINED NO_PYTHON_DEVTOOLS)
-    execute_process(
-        COMMAND "${Python3_EXECUTABLE}" "${CMAKE_SOURCE_DIR}/cmake/python_cmake_config.py" "--python-project-dev-dependencies"
-        OUTPUT_VARIABLE CMAKE_PYENV_DEV_DEPENDENCIES
-        OUTPUT_STRIP_TRAILING_WHITESPACE
-        WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
-        COMMAND_ERROR_IS_FATAL ANY)
-    execute_process(
-        COMMAND "${Python3_EXECUTABLE}" -m pip install ${CMAKE_PYENV_DEV_DEPENDENCIES}
-        COMMAND_ERROR_IS_FATAL ANY)
+    python_query_config(CMAKE_PYENV_DEV_DEPENDENCIES "--python-project-dev-dependencies")
+    python_pip_install(${CMAKE_PYENV_DEV_DEPENDENCIES})
 endif()
 
 file(GLOB_RECURSE PYMODULE_SRC CONFIGURE_DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/*")

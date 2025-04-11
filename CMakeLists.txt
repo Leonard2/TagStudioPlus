@@ -6,6 +6,8 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 
 #[
+include(${CMAKE_SOURCE_DIR}/cmake/PythonCMakeConfig.cmake)
+
 # Create a Python virutal environment.
 set(CMAKE_PYENV "${CMAKE_CURRENT_SOURCE_DIR}/python_env")
 add_subdirectory(${CMAKE_PYENV})
@@ -17,9 +19,7 @@ set(Python3_ROOT_DIR "")
 find_package(Python3 3.12 REQUIRED COMPONENTS Interpreter)
 
 # Install base Python modules (PySide is needed to configure CMake).
-execute_process(
-    COMMAND "${Python3_EXECUTABLE}" -m pip install setuptools packaging Pyinstaller==6.6.0 cmakelang
-    COMMAND_ERROR_IS_FATAL ANY)
+python_pip_install(setuptools packaging Pyinstaller==6.6.0 cmakelang)
 if(NOT DEFINED PYSIDE_WHEELS)
     # For self-built PySide6, you may use the "create_wheels.py" script to create packages.
     # Set "PYSIDE_WHEELS" to the directory containing the generated wheels to re-use them.
@@ -29,9 +29,7 @@ if(NOT DEFINED PYSIDE_WHEELS)
 else()
     file(GLOB PYSIDE_WHEELS "${PYSIDE_WHEELS}/*.whl")
 endif()
-execute_process(
-    COMMAND "${Python3_EXECUTABLE}" -m pip install ${PYSIDE_WHEELS}
-    COMMAND_ERROR_IS_FATAL ANY)
+python_pip_install(${PYSIDE_WHEELS})
 #]
 
 
