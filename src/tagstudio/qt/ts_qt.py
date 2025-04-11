@@ -702,6 +702,14 @@ class QtDriver(DriverMixin, QObject):
         if not which(FFMPEG_CMD) or not which(FFPROBE_CMD):
             FfmpegChecker().show()
 
+        try:
+            import tagstudioplus
+        except ImportError:
+            cppswitch = False
+        else:
+            cppswitch = tagstudioplus.cppswitch
+        logger.info(f"cppswitch is {cppswitch}")
+
         self.app.exec()
         self.shutdown()
 
