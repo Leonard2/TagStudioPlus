@@ -17,6 +17,7 @@ import platform
 import re
 import sys
 import time
+from types import SimpleNamespace
 from argparse import Namespace
 from pathlib import Path
 from queue import Queue
@@ -705,10 +706,10 @@ class QtDriver(DriverMixin, QObject):
         try:
             import tagstudioplus
         except ImportError:
-            cppswitch = False
+            cppswitch = SimpleNamespace(enabled=False)
         else:
             cppswitch = tagstudioplus.cppswitch
-        logger.info(f"cppswitch is {cppswitch}")
+        logger.info(f"cppswitch is {cppswitch.enabled}")
 
         self.app.exec()
         self.shutdown()

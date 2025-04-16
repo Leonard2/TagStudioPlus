@@ -2,29 +2,12 @@
 
 #include <stdlib.h>
 
-#include "Python.h"
+#include "tagstudioplus_python.h"
+extern "C" PyObject *PyInit_tagstudioplus();
 
 const char *script = "import tagstudio.main\n"
                      "tagstudio.main.main()";
 
-
-PyMODINIT_FUNC PyInit_TSPlus()
-{
-    static PyModuleDef TagStudioPlus =
-    {
-        PyModuleDef_HEAD_INIT,
-        "tagstudioplus",
-        nullptr,
-        -1,
-        nullptr,
-        nullptr,
-        nullptr,
-        nullptr,
-        nullptr
-    };
-
-    return PyModule_Create(&TagStudioPlus);
-}
 
 int main(int argc, char *argv[])
 {
@@ -33,7 +16,7 @@ int main(int argc, char *argv[])
     dir = dir / "_internal";
     putenv(std::format("PYTHONPATH={}", dir.string()).c_str());
 
-    if (PyImport_AppendInittab("tagstudioplus", PyInit_TSPlus) < 0)
+    if (PyImport_AppendInittab("tagstudioplus", PyInit_tagstudioplus) < 0)
     {
         if (PyErr_Occurred())
             PyErr_Print();
@@ -55,8 +38,10 @@ int main(int argc, char *argv[])
         return 1;
     }
 
-    auto swtch = PyBool_FromLong(1);
-    if (PyModule_AddObject(module, "cppswitch", swtch) < 0)
+    cppswitch swtch;
+    swtch.enabled = true;
+    auto *pyObj = Shiboken::Conversions::pointerToPython(Shiboken::SbkType<cppswitch>(), &swtch);
+    if (PyModule_AddObject(module, "cppswitch", pyObj) < 0)
     {
         if (PyErr_Occurred())
             PyErr_Print();
