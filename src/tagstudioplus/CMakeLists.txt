@@ -37,14 +37,19 @@ add_custom_command(
 python_query_config(SHIBOKEN_INCLUDE_DIR "--shiboken-include")
 python_query_config(SHIBOKEN_LIBRARIES "--shiboken-library")
 add_library(ShibokenLib SHARED IMPORTED)
+set(SHIB_LIB_PROP IMPORTED_LOCATION)
+if(WIN32)
+    list(
+        TRANSFORM SHIBOKEN_LIBRARIES
+        REPLACE "^(.*)\\.lib$" "\\1.dll"
+        OUTPUT_VARIABLE SHIBOKEN_DLLS)
+    set_target_properties(ShibokenLib PROPERTIES IMPORTED_LOCATION ${SHIBOKEN_DLLS})
+    set(SHIB_LIB_PROP IMPORTED_IMPLIB)
+endif()
 set_target_properties(ShibokenLib
     PROPERTIES
-        IMPORTED_LOCATION ${SHIBOKEN_LIBRARIES}
+        ${SHIB_LIB_PROP} ${SHIBOKEN_LIBRARIES}
         INTERFACE_INCLUDE_DIRECTORIES ${SHIBOKEN_INCLUDE_DIR})
-if(WIN32)
-    list(TRANSFORM SHIBOKEN_LIBRARIES REPLACE "^(.*)\\.dll$" "\\1.lib")
-    set_target_properties(ShibokenLib PROPERTIES IMPORTED_IMPLIB ${SHIBOKEN_LIBRARIES})
-endif()
 # TODO: Should really be the SABI Module.
 target_link_libraries(ShibokenLib INTERFACE Python3::Module)
 
