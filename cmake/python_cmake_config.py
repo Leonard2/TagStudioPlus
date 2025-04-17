@@ -24,17 +24,15 @@ def python_project_dev_dependencies():
     deps = proj['project']['optional-dependencies']
     deps.pop('dev')
 
-    res = []
-    for key in dev:
-        res += deps[key]
+    res = [v for key in dev for v in deps[key]]
     return ';'.join(res)
 
 def find_module(module):
     for p in sys.path:
         if 'site-' in p:
-            module = os.path.join(p, module)
-            if os.path.exists(module):
-                return os.path.realpath(module)
+            m = os.path.join(p, module)
+            if os.path.exists(m):
+                return os.path.realpath(m)
     print(f'Unable to find module {module}.')
     return None
 
@@ -50,7 +48,7 @@ parser = argparse.ArgumentParser()
 queries = parser.add_subparsers(**subparser_props)
 
 
-error_pyproject = ('Unable to process the \'pyproject.toml\' file.'
+error_pyproject = ('Unable to process the \'pyproject.toml\' file.\n'
                    'Make sure the file is present, accessible and valid.')
 subparser = queries.add_parser('pyproj',
                                **kwpackval("queries information about the Python project",
@@ -70,7 +68,7 @@ subparser.add_parser('devdeps',
                      ).set_defaults(func=lambda _: python_project_dev_dependencies(),
                                     err=error_pyproject)
 
-error_module = ('Did you forget to activate your virtualenv? Or perhaps'
+error_module = ('Did you forget to activate your virtualenv?\nOr perhaps'
                 ' you forgot to build / install PySide6 into your currently active Python'
                 ' environment?')
 subparser = queries.add_parser('module',

@@ -11,6 +11,7 @@ function(python_query_config resultVar option)
         COMMAND_ECHO STDOUT
         COMMAND_ERROR_IS_FATAL ANY)
 
+    list(TRANSFORM ${resultVar} REPLACE "\\\\" "/")
     return(PROPAGATE ${resultVar})
 endfunction()
 

@@ -95,6 +95,7 @@ if (WIN32)
         VERBATIM
         USES_TERMINAL
         COMMAND_EXPAND_LISTS
+        # https://gitlab.kitware.com/cmake/cmake/-/issues/15461
         COMMENT "Copying DLL files to bin folder."
         COMMAND ${CMAKE_COMMAND}
             -E copy

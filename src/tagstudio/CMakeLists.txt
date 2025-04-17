@@ -23,6 +23,7 @@ add_custom_command(
     USES_TERMINAL
     DEPENDS ${PYMODULE_SRC}
     WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+    COMMENT "Building Python module with PyInstaller."
     COMMAND ${CMAKE_COMMAND} -E touch "${CMAKE_CURRENT_SOURCE_DIR}/main.py"
     COMMAND Python3::InterpreterMultiConfig
     "-m" "PyInstaller" "${CMAKE_SOURCE_DIR}/tagstudio.spec"
@@ -38,6 +39,7 @@ add_custom_command(
     USES_TERMINAL
     DEPENDS "${STAMP_DIR}/1"
     WORKING_DIRECTORY "${CMAKE_BINARY_DIR}/bin/_internal"
+    COMMENT "Extracting \"base_library.zip\"."
     COMMAND ${CMAKE_COMMAND} -E tar xv "base_library.zip"
     COMMAND ${CMAKE_COMMAND} -E rm -r "base_library.zip"
     COMMAND ${CMAKE_COMMAND} -E touch "${STAMP_DIR}/2"
