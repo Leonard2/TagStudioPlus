@@ -48,5 +48,25 @@ int main(int argc, char *argv[])
         return -1;
     }
 
-    return PyRun_SimpleString(script);
+    auto *codeObj = Py_CompileString(script, "<internal>", Py_file_input);
+    if (codeObj == nullptr)
+    {
+        return -1;
+    }
+
+    auto *main = PyImport_AddModule("__main__");
+    if (main == nullptr)
+    {
+        return -1;
+    }
+    auto *dict = PyModule_GetDict(main);
+    if (dict == nullptr)
+    {
+        if (PyErr_Occurred())
+            PyErr_Print();
+        return -1;
+    }
+
+    PyEval_EvalCode(codeObj, dict, dict);
+    return 0;
 }

@@ -49,9 +49,10 @@ endif()
 set_target_properties(ShibokenLib
     PROPERTIES
         ${SHIB_LIB_PROP} ${SHIBOKEN_LIBRARIES}
+        # As of 6.8.2.1, Shiboken uses a Python 3.8.0 limited API.
+        INTERFACE_COMPILE_DEFINITIONS "Py_LIMITED_API=0x03080000"
         INTERFACE_INCLUDE_DIRECTORIES ${SHIBOKEN_INCLUDE_DIR})
-# TODO: Should really be the SABI Module.
-target_link_libraries(ShibokenLib INTERFACE Python3::Module)
+target_link_libraries(ShibokenLib INTERFACE Python3::SABIModule)
 
 # Create our bindings target.
 set(BINDLIBTYPE "STATIC")
