@@ -4,7 +4,7 @@ include(${CMAKE_SOURCE_DIR}/cmake/PythonCMakeConfig.cmake)
 
 
 # Get the Shiboken generator as a target.
-python_query_config(SHIBOKEN_EXECUTABLE "--shiboken-generator")
+python_query_config(SHIBOKEN_EXECUTABLE "shiboken" "generator")
 add_executable(ShibokenGen IMPORTED)
 set_target_properties(ShibokenGen
     PROPERTIES
@@ -34,8 +34,8 @@ add_custom_command(
     OUTPUT ${BINDINGS_OUTPUT})
 
 # Get Shiboken library as a target.
-python_query_config(SHIBOKEN_INCLUDE_DIR "--shiboken-include")
-python_query_config(SHIBOKEN_LIBRARIES "--shiboken-library")
+python_query_config(SHIBOKEN_INCLUDE_DIR "shiboken" "include")
+python_query_config(SHIBOKEN_LIBRARIES "shiboken" "libraries")
 add_library(ShibokenLib SHARED IMPORTED)
 set(SHIB_LIB_PROP IMPORTED_LOCATION)
 if(WIN32)

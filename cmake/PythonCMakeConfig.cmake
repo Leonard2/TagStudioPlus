@@ -2,8 +2,9 @@
 
 
 function(python_query_config resultVar option)
+    list(POP_FRONT ARGV)
     execute_process(
-        COMMAND "${Python3_EXECUTABLE}" "${CMAKE_SOURCE_DIR}/cmake/python_cmake_config.py" "${option}"
+        COMMAND "${Python3_EXECUTABLE}" "${CMAKE_SOURCE_DIR}/cmake/python_cmake_config.py" ${ARGV}
         OUTPUT_VARIABLE ${resultVar}
         OUTPUT_STRIP_TRAILING_WHITESPACE
         WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}

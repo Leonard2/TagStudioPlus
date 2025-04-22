@@ -4,13 +4,13 @@ include(${CMAKE_SOURCE_DIR}/cmake/PythonCMakeConfig.cmake)
 
 
 # Install modules necessary for running the python app.
-python_query_config(CMAKE_PYENV_DEPENDENCIES "--python-project-dependencies")
+python_query_config(CMAKE_PYENV_DEPENDENCIES "pyproj" "deps")
 # We need to remove this entry to avoid conflicting with self-built PySide (if used).
 list(FILTER CMAKE_PYENV_DEPENDENCIES EXCLUDE REGEX "PySide6*")
 python_pip_install(${CMAKE_PYENV_DEPENDENCIES})
 # Install development python modules.
 if (NOT DEFINED NO_PYTHON_DEVTOOLS)
-    python_query_config(CMAKE_PYENV_DEV_DEPENDENCIES "--python-project-dev-dependencies")
+    python_query_config(CMAKE_PYENV_DEV_DEPENDENCIES "pyproj" "devdeps")
     python_pip_install(${CMAKE_PYENV_DEV_DEPENDENCIES})
 endif()
 

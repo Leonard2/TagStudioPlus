@@ -1,51 +1,12 @@
 # Convenience functions for easy CMake configuration.
 # Inspired from: https://doc.qt.io/qtforpython-6/examples/example_scriptableapplication_scriptableapplication.html
 
+import argparse
 import sys
 import os
 import glob
 import re
 import tomllib
-
-
-error_pyproject = ('Unable to process the \'pyproject.toml\' file.'
-                   'Make sure the file is present, accessible and valid.')
-error_module = ('Did you forget to activate your virtualenv? Or perhaps'
-                ' you forgot to build / install PySide6 into your currently active Python'
-                ' environment?')
-
-# option, function, error, description
-options = {}
-
-options.update({"--python-project-dependencies":
-                (lambda: python_project_dependencies(),
-                error_pyproject,
-                "Print current Python project dependencies.")})
-options.update({"--python-project-dev-dependencies":
-                (lambda: python_project_dev_dependencies(),
-                error_pyproject,
-                "Print current Python project optional dev dependencies.")})
-options.update({"--shiboken-include":
-                (lambda: shiboken_include(),
-                error_module,
-                "Print the include directory necessary for Shiboken-generated files.")})
-options.update({"--shiboken-library":
-                (lambda: shiboken_library(),
-                error_module,
-                "Print the path to the shared libraries necessary for Shiboken-generated files.")})
-options.update({"--shiboken-generator":
-                (lambda: shiboken_generator(),
-                error_module,
-                "Print the path to the Shiboken generator.")})
-usage = ""
-options.update({"-h":
-                (lambda: usage,
-                "",
-                "Show command line usage.")})
-options.update({0:
-                (lambda: print(usage),
-                 "Invalid options.",
-                 "")})
 
 
 def python_project_dependencies():
@@ -136,24 +97,67 @@ def shiboken_generator():
     return result
 
 
-options_usage = ''
-for i, (flag, (_, _, description)) in enumerate(options.items()):
-    if flag != 0:
-        options_usage += f'    {flag:<45} {description}'
-    if i < len(options) - 1:
-        options_usage += '\n'
+def kwpackval(key, *keys): return {k: key for k in keys}
+subparser_props = { 'title': 'queries',
+                    'description': 'valid queries',
+                    'help': 'additional help',
+                    'required': True }
 
-usage = f"""
-Utility to determine various Python config options for CMake projects.
 
-Usage: python_cmake_config.py [option]
-Options:
-{options_usage}
-"""
+parser = argparse.ArgumentParser()
+queries = parser.add_subparsers(**subparser_props)
 
-option = sys.argv[1] if len(sys.argv) == 2 else 0
-handler, error, _ = options.get(option, options[0])
-handler_result = handler()
-if handler_result is None:
-    sys.exit(error)
-print(handler_result)
+
+error_pyproject = ('Unable to process the \'pyproject.toml\' file.'
+                   'Make sure the file is present, accessible and valid.')
+subparser = queries.add_parser('pyproj',
+                               **kwpackval("queries information about the Python project",
+                                           'help',
+                                           'description')
+                               ).add_subparsers(**subparser_props)
+subparser.add_parser('deps',
+                     **kwpackval("query the project's direct dependencies",
+                                 'help',
+                                 'description')
+                     ).set_defaults(func=python_project_dependencies,
+                                    err=error_pyproject)
+subparser.add_parser('devdeps',
+                     **kwpackval("query the project's development dependencies",
+                                 'help',
+                                 'description')
+                     ).set_defaults(func=python_project_dev_dependencies,
+                                    err=error_pyproject)
+
+error_module = ('Did you forget to activate your virtualenv? Or perhaps'
+                ' you forgot to build / install PySide6 into your currently active Python'
+                ' environment?')
+subparser = queries.add_parser('shiboken',
+                               **kwpackval("queries information about Shiboken",
+                                           'help',
+                                           'description')
+                               ).add_subparsers(**subparser_props)
+subparser.add_parser('generator',
+                     **kwpackval("query the Shiboken generator path",
+                                 'help',
+                                 'description')
+                     ).set_defaults(func=shiboken_generator,
+                                    err=error_module)
+subparser.add_parser('include',
+                     **kwpackval("query Shiboken's include directories needed for its generated files",
+                                 'help',
+                                 'description')
+                     ).set_defaults(func=shiboken_include,
+                                    err=error_module)
+subparser.add_parser('libraries',
+                     **kwpackval("query Shiboken's libraries needed for linking its generated files",
+                                 'help',
+                                 'description')
+                     ).set_defaults(func=shiboken_library,
+                                    err=error_module)
+
+
+args = parser.parse_args()
+res = args.func()
+if res is None:
+    sys.exit(args.err)
+print(res)
