@@ -4,7 +4,12 @@ include(${CMAKE_SOURCE_DIR}/cmake/PythonCMakeConfig.cmake)
 
 
 # Get the Shiboken generator as a target.
-python_query_config(SHIBOKEN_EXECUTABLE "shiboken" "generator")
+python_query_config(MODULE_SHIBOKENGEN "module" "shiboken6_generator")
+
+find_program(SHIBOKEN_EXECUTABLE "shiboken6"
+    PATHS ${MODULE_SHIBOKENGEN}
+    REQUIRED
+    NO_DEFAULT_PATH)
 add_executable(ShibokenGen IMPORTED)
 set_target_properties(ShibokenGen
     PROPERTIES
@@ -34,8 +39,20 @@ add_custom_command(
     OUTPUT ${BINDINGS_OUTPUT})
 
 # Get Shiboken library as a target.
-python_query_config(SHIBOKEN_INCLUDE_DIR "shiboken" "include")
-python_query_config(SHIBOKEN_LIBRARIES "shiboken" "libraries")
+python_query_config(MODULE_SHIBOKEN "module" "shiboken6")
+
+message(CHECK_START "Looking for Shiboken include directory")
+set(SHIBOKEN_INCLUDE_DIR "${MODULE_SHIBOKENGEN}/include")
+if(NOT EXISTS ${SHIBOKEN_INCLUDE_DIR} OR NOT IS_DIRECTORY ${SHIBOKEN_INCLUDE_DIR})
+    message(CHECK_FAIL "not found.")
+    message(FATAL_ERROR "Shiboken include directory not found.")
+endif()
+message(CHECK_PASS "found.")
+
+find_library(SHIBOKEN_LIBRARIES "shiboken6.abi3"
+    PATHS ${MODULE_SHIBOKEN}
+    REQUIRED
+    NO_DEFAULT_PATH)
 add_library(ShibokenLib SHARED IMPORTED)
 set(SHIB_LIB_PROP IMPORTED_LOCATION)
 if(WIN32)
