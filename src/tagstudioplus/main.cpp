@@ -1,6 +1,7 @@
 #include <filesystem>
 
-#include <stdlib.h>
+#include <QtGlobal>
+#include <QByteArrayView>
 
 #include "tagstudioplus_python.h"
 extern "C" PyObject *PyInit_tagstudioplus();
@@ -12,9 +13,9 @@ const char *script = "import tagstudio.main\n"
 int main(int argc, char *argv[])
 {
     auto dir = std::filesystem::weakly_canonical(std::filesystem::path(argv[0])).parent_path();
-    putenv(std::format("PYTHONHOME={}", dir.string()).c_str());
+    qputenv("PYTHONHOME", dir.string().c_str());
     dir = dir / "_internal";
-    putenv(std::format("PYTHONPATH={}", dir.string()).c_str());
+    qputenv("PYTHONPATH", dir.string().c_str());
 
     if (PyImport_AppendInittab("tagstudioplus", PyInit_tagstudioplus) < 0)
     {
