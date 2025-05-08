@@ -4,16 +4,9 @@ include(${CMAKE_SOURCE_DIR}/cmake/PythonCMakeConfig.cmake)
 
 
 # Get the Shiboken generator as a target.
-python_query_config(MODULE_SHIBOKENGEN "module" "shiboken6_generator")
-
-find_program(SHIBOKEN_EXECUTABLE "shiboken6"
-    PATHS ${MODULE_SHIBOKENGEN}
-    REQUIRED
-    NO_DEFAULT_PATH)
-add_executable(ShibokenGen IMPORTED)
-set_target_properties(ShibokenGen
-    PROPERTIES
-        IMPORTED_LOCATION ${SHIBOKEN_EXECUTABLE})
+module_target(ShibokenGen "shiboken6_generator")
+module_program(ShibokenGen "shiboken6")
+module_include(ShibokenGen) # Needed for the imported library target.
 
 # Generate Shiboken binding files.
 set(BINDINGS_INPUT
@@ -27,7 +20,7 @@ add_custom_command(
     DEPENDS
         "${CMAKE_CURRENT_SOURCE_DIR}/bindings.xml"
         ${BINDINGS_INPUT}
-    COMMAND ShibokenGen
+    COMMAND ShibokenGenExe
         "--generator-set=shiboken"
         "--avoid-protected-hack"
         "--use-global-header"
@@ -39,36 +32,13 @@ add_custom_command(
     OUTPUT ${BINDINGS_OUTPUT})
 
 # Get Shiboken library as a target.
-python_query_config(MODULE_SHIBOKEN "module" "shiboken6")
-
-message(CHECK_START "Looking for Shiboken include directory")
-set(SHIBOKEN_INCLUDE_DIR "${MODULE_SHIBOKENGEN}/include")
-if(NOT EXISTS ${SHIBOKEN_INCLUDE_DIR} OR NOT IS_DIRECTORY ${SHIBOKEN_INCLUDE_DIR})
-    message(CHECK_FAIL "not found.")
-    message(FATAL_ERROR "Shiboken include directory not found.")
-endif()
-message(CHECK_PASS "found.")
-
-find_library(SHIBOKEN_LIBRARIES "shiboken6.abi3"
-    PATHS ${MODULE_SHIBOKEN}
-    REQUIRED
-    NO_DEFAULT_PATH)
-add_library(ShibokenLib SHARED IMPORTED)
-set(SHIB_LIB_PROP IMPORTED_LOCATION)
-if(WIN32)
-    list(
-        TRANSFORM SHIBOKEN_LIBRARIES
-        REPLACE "^(.*)\\.lib$" "\\1.dll"
-        OUTPUT_VARIABLE SHIBOKEN_DLLS)
-    set_target_properties(ShibokenLib PROPERTIES IMPORTED_LOCATION ${SHIBOKEN_DLLS})
-    set(SHIB_LIB_PROP IMPORTED_IMPLIB)
-endif()
+module_target(Shiboken "shiboken6")
+module_library(Shiboken "shiboken6")
 set_target_properties(ShibokenLib
     PROPERTIES
-        ${SHIB_LIB_PROP} ${SHIBOKEN_LIBRARIES}
         # As of 6.8.2.1, Shiboken uses a Python 3.8.0 limited API.
         INTERFACE_COMPILE_DEFINITIONS "Py_LIMITED_API=0x03080000"
-        INTERFACE_INCLUDE_DIRECTORIES ${SHIBOKEN_INCLUDE_DIR})
+        INTERFACE_INCLUDE_DIRECTORIES ${ShibokenGen_INCLUDE_DIR})
 target_link_libraries(ShibokenLib INTERFACE Python3::SABIModule)
 
 # Create our bindings target.
