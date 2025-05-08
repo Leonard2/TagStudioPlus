@@ -1,3 +1,6 @@
 <typesystem package="tagstudioplus">
-    <value-type name="cppswitch"/>
+    <load-typesystem name="typesystem_widgets.xml" generate="no"/>
+    <object-type name="TSPApplication">
+        <modify-function signature="TSPApplication(int&amp;,char**)" remove="true"/>
+    </object-type>
 </typesystem>

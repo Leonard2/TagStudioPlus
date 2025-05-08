@@ -3,20 +3,61 @@ project(TagStudioPlus)
 include(${CMAKE_SOURCE_DIR}/cmake/PythonCMakeConfig.cmake)
 
 
+set(QT_COMPONENTS Core Gui Widgets)
+
 # Get the Shiboken generator as a target.
 module_target(ShibokenGen "shiboken6_generator")
 module_program(ShibokenGen "shiboken6")
-module_include(ShibokenGen) # Needed for the imported library target.
+module_directory(ShibokenGen "include") # Needed for the imported library target.
+
+# Get the PySide module as a target.
+module_target(PySide "PySide6")
+module_library(PySide "pyside6")
+module_directory(PySide "include")
+module_directory(PySide "typesystems")
+set_target_properties(PySideLib
+    PROPERTIES
+        INTERFACE_INCLUDE_DIRECTORIES ${PySide_INCLUDE_DIR})
 
 # Generate Shiboken binding files.
+function(genex_escape var)
+    # https://discourse.cmake.org/t/mapping-lists-in-generator-expressions/12833/3
+    # Non-recursive
+    string(REPLACE "\\<"            "<"             ${var} "${${var}}")
+    string(REPLACE "\\>"            "__ANGLE_R__"   ${var} "${${var}}")
+    string(REPLACE "\\$"            "$<1:$>"        ${var} "${${var}}")
+    string(REPLACE "\\,"            "$<COMMA>"      ${var} "${${var}}")
+    string(REPLACE "__ANGLE_R__"    "$<ANGLE-R>"    ${var} "${${var}}")
+
+    return(PROPAGATE ${var})
+endfunction()
+
+string(
+    APPEND GENEX_BINDINGS_INCLUDE
+    "$<LIST:REMOVE_DUPLICATES,"
+        "$<GENEX_EVAL:"
+            "$<LIST:TRANSFORM,"
+                "${QT_COMPONENTS},"
+                "REPLACE,"
+                "(.+),"
+                "\\$\\<TARGET_PROPERTY:"
+                    "Qt6::\\1\\,"
+                    "INTERFACE_INCLUDE_DIRECTORIES"
+                "\\>"
+            ">"
+        ">"
+    ">")
+genex_escape(GENEX_BINDINGS_INCLUDE)
+
 set(BINDINGS_INPUT
-    "${CMAKE_CURRENT_SOURCE_DIR}/cppswitch.h")
+    "${CMAKE_CURRENT_SOURCE_DIR}/application.h")
 set(BINDINGS_OUTDIR "${CMAKE_CURRENT_BINARY_DIR}/bindings")
 set(BINDINGS_OUTPUT
     "${BINDINGS_OUTDIR}/tagstudioplus/tagstudioplus_module_wrapper.cpp"
-    "${BINDINGS_OUTDIR}/tagstudioplus/cppswitch_wrapper.cpp")
+    "${BINDINGS_OUTDIR}/tagstudioplus/tspapplication_wrapper.cpp")
 add_custom_command(
     COMMENT "Running Shiboken generator on bindings."
+    COMMAND_EXPAND_LISTS
     DEPENDS
         "${CMAKE_CURRENT_SOURCE_DIR}/bindings.xml"
         ${BINDINGS_INPUT}
@@ -24,8 +65,11 @@ add_custom_command(
         "--generator-set=shiboken"
         "--avoid-protected-hack"
         "--use-global-header"
+        "--enable-pyside-extensions"
         "--output-directory=${BINDINGS_OUTDIR}"
+        "-T${PySide_TYPESYSTEMS_DIR}"
         "-T${CMAKE_CURRENT_SOURCE_DIR}"
+        "$<LIST:TRANSFORM,${GENEX_BINDINGS_INCLUDE},PREPEND,-I>"
         "-I${CMAKE_CURRENT_SOURCE_DIR}"
         ${BINDINGS_INPUT}
         "${CMAKE_CURRENT_SOURCE_DIR}/bindings.xml"
@@ -47,17 +91,26 @@ if(BUILD_SHARED_LIBS)
     set(BINDLIBTYPE "MODULE")
 endif()
 add_library(TagStudioPlusBindings ${BINDLIBTYPE} ${BINDINGS_OUTPUT})
-target_link_libraries(TagStudioPlusBindings PUBLIC ShibokenLib)
+target_link_libraries(TagStudioPlusBindings
+    PUBLIC
+        ShibokenLib
+        PySideLib)
 target_include_directories(TagStudioPlusBindings
     PRIVATE
         ${CMAKE_CURRENT_SOURCE_DIR}
     PUBLIC
         "${BINDINGS_OUTDIR}/tagstudioplus")
+foreach(COMPONENT ${QT_COMPONENTS})
+    target_link_libraries(TagStudioPlusBindings
+        PUBLIC Qt6::${COMPONENT})
+    target_include_directories(TagStudioPlusBindings
+        PUBLIC "${PySide_INCLUDE_DIR}/Qt${COMPONENT}")
+endforeach()
 
 # Main executable.
 # Note: this must be the same version of Qt used to build PySide.
 # They should really add a way to query this information from the module.
-find_package(Qt6 REQUIRED COMPONENTS Core)
+find_package(Qt6 REQUIRED COMPONENTS ${QT_COMPONENTS})
 
 file(GLOB_RECURSE TSPLUS_SRC
     CONFIGURE_DEPENDS

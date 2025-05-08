@@ -77,7 +77,8 @@ subparser = queries.add_parser('module',
                                            'description'))
 subparser.add_argument('which',
                        help='which module to query for',
-                       choices=['shiboken6',
+                       choices=['PySide6',
+                                'shiboken6',
                                 'shiboken6_generator'])
 subparser.set_defaults(func=lambda args: find_module(args.which),
                        err=error_module)

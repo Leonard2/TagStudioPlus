@@ -39,10 +39,9 @@ int main(int argc, char *argv[])
         return 1;
     }
 
-    cppswitch swtch;
-    swtch.enabled = true;
-    auto *pyObj = Shiboken::Conversions::pointerToPython(Shiboken::SbkType<cppswitch>(), &swtch);
-    if (PyModule_AddObject(module, "cppswitch", pyObj) < 0)
+    TSPApplication app(argc, argv);
+    auto *pyObj = Shiboken::Conversions::pointerToPython(Shiboken::SbkType<TSPApplication>(), &app);
+    if (PyModule_AddObject(module, "app", pyObj) < 0)
     {
         if (PyErr_Occurred())
             PyErr_Print();

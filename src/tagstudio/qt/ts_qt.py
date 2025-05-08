@@ -273,7 +273,15 @@ class QtDriver(DriverMixin, QObject):
 
         if self.settings.theme == Theme.SYSTEM and platform.system() == "Windows":
             sys.argv += ["-platform", "windows:darkmode=2"]
-        self.app = QApplication(sys.argv)
+
+        try:
+            import tagstudioplus
+        except ImportError:
+            self.app = QApplication(sys.argv)
+        else:
+            self.app = tagstudioplus.app
+        logger.info(f"hascpp is {self.app.property('hascpp') or False}")
+
         self.app.setStyle("Fusion")
         if self.settings.theme == Theme.SYSTEM:
             # TODO: detect theme instead of always setting dark
@@ -717,14 +725,6 @@ class QtDriver(DriverMixin, QObject):
         # Check if FFmpeg or FFprobe are missing and show warning if so
         if not which(FFMPEG_CMD) or not which(FFPROBE_CMD):
             FfmpegChecker().show()
-
-        try:
-            import tagstudioplus
-        except ImportError:
-            cppswitch = SimpleNamespace(enabled=False)
-        else:
-            cppswitch = tagstudioplus.cppswitch
-        logger.info(f"cppswitch is {cppswitch.enabled}")
 
         self.app.exec()
         self.shutdown()
