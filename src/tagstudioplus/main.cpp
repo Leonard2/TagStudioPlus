@@ -3,6 +3,8 @@
 #include <QtGlobal>
 #include <QByteArrayView>
 
+#include "autodecref.h"
+
 #include "tagstudioplus_python.h"
 extern "C" PyObject *PyInit_tagstudioplus();
 
@@ -31,42 +33,50 @@ int main(int argc, char *argv[])
         return 1;
     }
 
-    auto module = PyImport_ImportModule("tagstudioplus");
-    if (!module)
     {
-        if (PyErr_Occurred())
-            PyErr_Print();
-        return 1;
+        Shiboken::AutoDecRef module(PyImport_ImportModule("tagstudioplus"));
+        if (module.object() == nullptr)
+        {
+            if (PyErr_Occurred())
+                PyErr_Print();
+            return 1;
+        }
+
+        TSPApplication app(argc, argv);
+        Shiboken::AutoDecRef pyObj(Shiboken::Conversions::pointerToPython(Shiboken::SbkType<TSPApplication>(), &app));
+        if (PyModule_AddObject(module, "app", pyObj) < 0)
+        {
+            if (PyErr_Occurred())
+                PyErr_Print();
+            return -1;
+        }
+
+        {
+            Shiboken::AutoDecRef codeObj(Py_CompileString(script, "<internal>", Py_file_input));
+            if (codeObj.object() == nullptr)
+            {
+                return -1;
+            }
+            
+            Shiboken::AutoDecRef main(PyImport_AddModule("__main__"));
+            if (main.object() == nullptr)
+            {
+                return -1;
+            }
+            Py_IncRef(main);
+
+            Shiboken::AutoDecRef dict(PyModule_GetDict(main));
+            if (dict.object() == nullptr)
+            {
+                if (PyErr_Occurred())
+                PyErr_Print();
+                return -1;
+            }
+            Py_IncRef(dict);
+
+            Shiboken::AutoDecRef run(PyEval_EvalCode(codeObj, dict, dict));
+        }
     }
 
-    TSPApplication app(argc, argv);
-    auto *pyObj = Shiboken::Conversions::pointerToPython(Shiboken::SbkType<TSPApplication>(), &app);
-    if (PyModule_AddObject(module, "app", pyObj) < 0)
-    {
-        if (PyErr_Occurred())
-            PyErr_Print();
-        return -1;
-    }
-
-    auto *codeObj = Py_CompileString(script, "<internal>", Py_file_input);
-    if (codeObj == nullptr)
-    {
-        return -1;
-    }
-
-    auto *main = PyImport_AddModule("__main__");
-    if (main == nullptr)
-    {
-        return -1;
-    }
-    auto *dict = PyModule_GetDict(main);
-    if (dict == nullptr)
-    {
-        if (PyErr_Occurred())
-            PyErr_Print();
-        return -1;
-    }
-
-    PyEval_EvalCode(codeObj, dict, dict);
-    return 0;
+    return Py_FinalizeEx();
 }

@@ -64,6 +64,7 @@ add_custom_command(
     COMMAND ShibokenGenExe
         "--generator-set=shiboken"
         "--avoid-protected-hack"
+        "--enable-parent-ctor-heuristic"
         "--use-global-header"
         "--enable-pyside-extensions"
         "--output-directory=${BINDINGS_OUTDIR}"
