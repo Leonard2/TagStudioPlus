@@ -6,7 +6,20 @@ import sys
 import os
 import re
 import tomllib
+from packaging.version import Version
+from packaging.specifiers import SpecifierSet
 
+
+def python_project_versioncheck():
+    with open("pyproject.toml", "rb") as f:
+        proj = tomllib.load(f)
+    spec = SpecifierSet(proj['project']['requires-python'])
+    pyver = Version('.'.join(map(str, sys.version_info[:3])))
+    if pyver in spec:
+        return spec
+    else:
+        print(f"Current python version ({pyver}) does not satisfy the project's requirement ({spec}).")
+    return None
 
 def python_project_dependencies():
     with open("pyproject.toml", "rb") as f:
@@ -55,6 +68,12 @@ subparser = queries.add_parser('pyproj',
                                            'help',
                                            'description')
                                ).add_subparsers(**subparser_props)
+subparser.add_parser('version',
+                     **kwpackval("check the project's required python version",
+                                 'help',
+                                 'description')
+                     ).set_defaults(func=lambda _: python_project_versioncheck(),
+                                    err="Error while checking the Python version.")
 subparser.add_parser('deps',
                      **kwpackval("query the project's direct dependencies",
                                  'help',
