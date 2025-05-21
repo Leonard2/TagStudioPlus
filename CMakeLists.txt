@@ -21,18 +21,20 @@ set(Python3_EXECUTABLE "")
 set(Python3_ROOT_DIR "")
 find_package(Python3 REQUIRED COMPONENTS Interpreter)
 
-# Install base Python modules (PySide is needed to configure CMake).
+# Install base Python modules (mostly needed to run the Python configuration script).
 python_pip_install(setuptools packaging Pyinstaller==6.6.0 cmakelang)
 # We only check for the version now because the script needs the 'packaging' module to work.
 python_check_version()
 
+# We take care of PySide right now because it will be needed to configure the project later on.
 if(NOT DEFINED PYSIDE_WHEELS)
+    # Query the PySide requirement from the pyproject config.
+    python_get_dependencies(PYSIDE_WHEELS INCLUDE "PySide6")
+else()
     # For self-built PySide6, you may use the "create_wheels.py" script to create packages.
     # Set "PYSIDE_WHEELS" to the directory containing the generated wheels to re-use them.
     # As of 28/03/25, PySide is prebuilt for Python 3.9 in pip and TagStudio supports only
     # Python 3.12 minimum, so this is most likely needed.
-    set(PYSIDE_WHEELS "PySide6==6.8.0.1")
-else()
     file(GLOB PYSIDE_WHEELS "${PYSIDE_WHEELS}/*.whl")
 endif()
 python_pip_install(${PYSIDE_WHEELS})
