@@ -16,7 +16,7 @@ endif()
 
 file(GLOB_RECURSE PYMODULE_SRC CONFIGURE_DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/*")
 list(APPEND PYMODULE_SRC "${CMAKE_SOURCE_DIR}/tagstudio.spec")
-set(STAMP_DIR "${CMAKE_CURRENT_BINARY_DIR}/pymodule_stamp")
+set(STAMP_FILE "${CMAKE_CURRENT_BINARY_DIR}/pymodule.stamp")
 # Note: PyInstaller seems to be unable to handle a debug Python.
 add_custom_command(
     VERBATIM
@@ -32,19 +32,9 @@ add_custom_command(
     "-y" "--" "--cppready"
     COMMAND ${CMAKE_COMMAND} -E rm -rf "${CMAKE_BINARY_DIR}/bin/_internal"
     COMMAND ${CMAKE_COMMAND} -E copy_directory "${CMAKE_CURRENT_BINARY_DIR}/dist/TagStudio" "${CMAKE_BINARY_DIR}/bin"
-    COMMAND ${CMAKE_COMMAND} -E touch "${STAMP_DIR}/1"
-    OUTPUT "${STAMP_DIR}/1")
-add_custom_command(
-    VERBATIM
-    USES_TERMINAL
-    DEPENDS "${STAMP_DIR}/1"
-    WORKING_DIRECTORY "${CMAKE_BINARY_DIR}/bin/_internal"
-    COMMENT "Extracting \"base_library.zip\"."
-    COMMAND ${CMAKE_COMMAND} -E tar xv "base_library.zip"
-    COMMAND ${CMAKE_COMMAND} -E rm -r "base_library.zip"
-    COMMAND ${CMAKE_COMMAND} -E touch "${STAMP_DIR}/2"
-    OUTPUT "${STAMP_DIR}/2")
+    COMMAND ${CMAKE_COMMAND} -E touch ${STAMP_FILE}
+    OUTPUT ${STAMP_FILE})
 add_custom_target(TagStudio
     ALL
-    DEPENDS "${STAMP_DIR}/2"
+    DEPENDS ${STAMP_FILE}
     SOURCES ${PYMODULE_SRC})
