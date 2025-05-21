@@ -22,9 +22,12 @@ set(Python3_ROOT_DIR "")
 find_package(Python3 REQUIRED COMPONENTS Interpreter)
 
 # Install base Python modules (mostly needed to run the Python configuration script).
-python_pip_install(setuptools packaging Pyinstaller==6.6.0 cmakelang)
+python_pip_install(setuptools packaging cmakelang)
 # We only check for the version now because the script needs the 'packaging' module to work.
 python_check_version()
+# PyInstaller is not strictly needed during generation/configuration but will be needed at build time.
+python_get_dev_dependencies(__PYINSTALLER INCLUDE "PyInstaller")
+python_pip_install("${__PYINSTALLER}")
 
 # We take care of PySide right now because it will be needed to configure the project later on.
 if(NOT DEFINED PYSIDE_WHEELS)
