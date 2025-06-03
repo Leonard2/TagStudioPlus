@@ -728,26 +728,13 @@ class QtDriver(DriverMixin, QObject):
             # no need to do other things on shutdown
             return
 
-        self.main_window.setWindowTitle(self.base_title)
-
         self.selected.clear()
         self.frame_content.clear()
         [x.set_mode(None) for x in self.item_thumbs]
         if self.color_manager_panel:
             self.color_manager_panel.reset()
 
-        self.main_window.menu_bar.set_clipboard_menu_viability(copy=False, paste=False)
-        self.main_window.menu_bar.set_select_actions_visibility(on_selection=False,
-                                                                on_selected=False)
-
-        self.main_window.preview_panel.update_view(self.selected)
-        self.main_window.toggle_landing_page(enabled=True)
-        self.main_window.pagination.setHidden(True)
-        self.main_window.menu_bar.set_library_actions_visibility(False)
-
-        # NOTE: Doesn't try to disable during tests
-        if self.main_window.menu_bar.add_tag_to_selected_action:
-            self.main_window.menu_bar.add_tag_to_selected_action.setEnabled(False)
+        self.main_window.library_closed(self.base_title)
 
         end_time = time.time()
         self.main_window.status_bar.showMessage(
@@ -1693,28 +1680,22 @@ class QtDriver(DriverMixin, QObject):
             library_dir_display = self.lib.library_dir.name
 
         self.update_libs_list(path)
-        self.main_window.setWindowTitle(
-            Translations.format(
+
+        self.init_file_extension_manager()
+
+        self.selected.clear()
+
+        # page (re)rendering, extract eventually
+        self.update_browsing_state()
+
+        self.main_window.library_opened(
+                Translations.format(
                 "app.title",
                 base_title=self.base_title,
                 library_dir=library_dir_display,
             )
         )
-        self.main_window.setAcceptDrops(True)
 
-        self.init_file_extension_manager()
-
-        self.selected.clear()
-        self.main_window.menu_bar.set_select_actions_visibility(on_selection=bool(self.frame_content),
-                                                                on_selected=False)
-        self.main_window.menu_bar.set_library_actions_visibility(True)
-
-        self.main_window.preview_panel.update_view(self.selected)
-
-        # page (re)rendering, extract eventually
-        self.update_browsing_state()
-
-        self.main_window.toggle_landing_page(enabled=False)
         return open_status
 
     def drop_event(self, event: QDropEvent):

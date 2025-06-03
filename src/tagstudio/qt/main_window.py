@@ -275,6 +275,32 @@ class MainWindow(QMainWindow):
             self.landing_widget.setHidden(True)
             self.landing_widget.set_status_label("")
             self.entry_scroll_area.setHidden(False)
+    
+    def library_opened(self, title: str):
+        self.setWindowTitle(title)
+
+        self.setAcceptDrops(True)
+
+        self.menu_bar.set_select_actions_visibility(on_selection=False, on_selected=False)
+        self.menu_bar.set_library_actions_visibility(True)
+
+        self.preview_panel.update_view([])
+
+        self.toggle_landing_page(enabled=False)
+
+    def library_closed(self, title: str):
+        self.setWindowTitle(title)
+
+        self.setAcceptDrops(False)
+
+        self.menu_bar.set_clipboard_menu_viability(copy=False, paste=False)
+        self.menu_bar.set_select_actions_visibility(on_selection=False,  on_selected=False)
+        self.menu_bar.set_library_actions_visibility(False)
+
+        self.pagination.setHidden(True)
+        
+        self.preview_panel.update_view([])
+        self.toggle_landing_page(enabled=True)
 
     @property
     def sorting_mode(self) -> SortingModeEnum:
