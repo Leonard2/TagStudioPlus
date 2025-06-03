@@ -736,28 +736,14 @@ class QtDriver(DriverMixin, QObject):
         if self.color_manager_panel:
             self.color_manager_panel.reset()
 
-        self.set_clipboard_menu_viability()
-        self.set_select_actions_visibility()
+        self.main_window.menu_bar.set_clipboard_menu_viability(copy=False, paste=False)
+        self.main_window.menu_bar.set_select_actions_visibility(on_selection=False,
+                                                                on_selected=False)
 
         self.main_window.preview_panel.update_view(self.selected)
         self.main_window.toggle_landing_page(enabled=True)
         self.main_window.pagination.setHidden(True)
-        try:
-            self.main_window.menu_bar.save_library_backup_action.setEnabled(False)
-            self.main_window.menu_bar.close_library_action.setEnabled(False)
-            self.main_window.menu_bar.refresh_dir_action.setEnabled(False)
-            self.main_window.menu_bar.tag_manager_action.setEnabled(False)
-            self.main_window.menu_bar.color_manager_action.setEnabled(False)
-            self.main_window.menu_bar.manage_file_ext_action.setEnabled(False)
-            self.main_window.menu_bar.new_tag_action.setEnabled(False)
-            self.main_window.menu_bar.fix_unlinked_entries_action.setEnabled(False)
-            self.main_window.menu_bar.fix_dupe_files_action.setEnabled(False)
-            self.main_window.menu_bar.clear_thumb_cache_action.setEnabled(False)
-            self.main_window.menu_bar.folders_to_tags_action.setEnabled(False)
-        except AttributeError:
-            logger.warning(
-                "[Library] Could not disable library management menu actions. Is this in a test?"
-            )
+        self.main_window.menu_bar.set_library_actions_visibility(False)
 
         # NOTE: Doesn't try to disable during tests
         if self.main_window.menu_bar.add_tag_to_selected_action:
@@ -814,8 +800,11 @@ class QtDriver(DriverMixin, QObject):
                 self.selected.append(item.item_id)
                 item.thumb_button.set_selected(True)
 
-        self.set_clipboard_menu_viability()
-        self.set_select_actions_visibility()
+        self.main_window.menu_bar.set_clipboard_menu_viability(
+            copy=len(self.selected) == 1,
+            paste=bool(self.selected and (self.copy_buffer["fields"] or self.copy_buffer["tags"])))
+        self.main_window.menu_bar.set_select_actions_visibility(on_selection=bool(self.frame_content),
+                                                                on_selected=bool(self.selected))
 
         self.main_window.preview_panel.update_view(self.selected, update_preview=False)
 
@@ -833,18 +822,22 @@ class QtDriver(DriverMixin, QObject):
 
         self.selected = new_selected
 
-        self.set_clipboard_menu_viability()
-        self.set_select_actions_visibility()
+        self.main_window.menu_bar.set_clipboard_menu_viability(
+            copy=len(self.selected) == 1,
+            paste=bool(self.selected and (self.copy_buffer["fields"] or self.copy_buffer["tags"])))
+        self.main_window.menu_bar.set_select_actions_visibility(on_selection=bool(self.frame_content),
+                                                                on_selected=bool(self.selected))
 
         self.main_window.preview_panel.update_view(self.selected, update_preview=False)
 
     def clear_select_action_callback(self):
         self.selected.clear()
-        self.set_select_actions_visibility()
+        self.main_window.menu_bar.set_select_actions_visibility(on_selection=bool(self.frame_content),
+                                                                on_selected=False)
         for item in self.item_thumbs:
             item.thumb_button.set_selected(False)
 
-        self.set_clipboard_menu_viability()
+        self.main_window.menu_bar.set_clipboard_menu_viability(copy=False, paste=False)
         self.main_window.preview_panel.update_view(self.selected)
 
     def add_tags_to_selected_callback(self, tag_ids: list[int]):
@@ -1203,12 +1196,16 @@ class QtDriver(DriverMixin, QObject):
             self.item_thumbs.append(item_thumb)
 
     def copy_fields_action_callback(self):
+        copy = False
+        paste = False
         if len(self.selected) > 0:
+            copy = True
             entry = self.lib.get_entry_full(self.selected[0])
             if entry:
                 self.copy_buffer["fields"] = entry.fields
                 self.copy_buffer["tags"] = [tag.id for tag in entry.tags]
-        self.set_clipboard_menu_viability()
+                paste = True
+        self.main_window.menu_bar.set_clipboard_menu_viability(copy=copy, paste=paste)
 
     def paste_fields_action_callback(self):
         for id in self.selected:
@@ -1301,40 +1298,13 @@ class QtDriver(DriverMixin, QObject):
             else:
                 it.thumb_button.set_selected(False)
 
-        self.set_clipboard_menu_viability()
-        self.set_select_actions_visibility()
+        self.main_window.menu_bar.set_clipboard_menu_viability(
+            copy=len(self.selected) == 1,
+            paste=bool(self.selected and (self.copy_buffer["fields"] or self.copy_buffer["tags"])))
+        self.main_window.menu_bar.set_select_actions_visibility(on_selection=bool(self.frame_content),
+                                                                on_selected=bool(self.selected))
 
         self.main_window.preview_panel.update_view(self.selected)
-
-    def set_clipboard_menu_viability(self):
-        if len(self.selected) == 1:
-            self.main_window.menu_bar.copy_fields_action.setEnabled(True)
-        else:
-            self.main_window.menu_bar.copy_fields_action.setEnabled(False)
-        if self.selected and (self.copy_buffer["fields"] or self.copy_buffer["tags"]):
-            self.main_window.menu_bar.paste_fields_action.setEnabled(True)
-        else:
-            self.main_window.menu_bar.paste_fields_action.setEnabled(False)
-
-    def set_select_actions_visibility(self):
-        if not self.main_window.menu_bar.add_tag_to_selected_action:
-            return
-
-        if self.frame_content:
-            self.main_window.menu_bar.select_all_action.setEnabled(True)
-            self.main_window.menu_bar.select_inverse_action.setEnabled(True)
-        else:
-            self.main_window.menu_bar.select_all_action.setEnabled(False)
-            self.main_window.menu_bar.select_inverse_action.setEnabled(False)
-
-        if self.selected:
-            self.main_window.menu_bar.add_tag_to_selected_action.setEnabled(True)
-            self.main_window.menu_bar.clear_select_action.setEnabled(True)
-            self.main_window.menu_bar.delete_file_action.setEnabled(True)
-        else:
-            self.main_window.menu_bar.add_tag_to_selected_action.setEnabled(False)
-            self.main_window.menu_bar.clear_select_action.setEnabled(False)
-            self.main_window.menu_bar.delete_file_action.setEnabled(False)
 
     def update_completions_list(self, text: str) -> None:
         matches = re.search(
@@ -1735,18 +1705,9 @@ class QtDriver(DriverMixin, QObject):
         self.init_file_extension_manager()
 
         self.selected.clear()
-        self.set_select_actions_visibility()
-        self.main_window.menu_bar.save_library_backup_action.setEnabled(True)
-        self.main_window.menu_bar.close_library_action.setEnabled(True)
-        self.main_window.menu_bar.refresh_dir_action.setEnabled(True)
-        self.main_window.menu_bar.tag_manager_action.setEnabled(True)
-        self.main_window.menu_bar.color_manager_action.setEnabled(True)
-        self.main_window.menu_bar.manage_file_ext_action.setEnabled(True)
-        self.main_window.menu_bar.new_tag_action.setEnabled(True)
-        self.main_window.menu_bar.fix_unlinked_entries_action.setEnabled(True)
-        self.main_window.menu_bar.fix_dupe_files_action.setEnabled(True)
-        self.main_window.menu_bar.clear_thumb_cache_action.setEnabled(True)
-        self.main_window.menu_bar.folders_to_tags_action.setEnabled(True)
+        self.main_window.menu_bar.set_select_actions_visibility(on_selection=bool(self.frame_content),
+                                                                on_selected=False)
+        self.main_window.menu_bar.set_library_actions_visibility(True)
 
         self.main_window.preview_panel.update_view(self.selected)
 

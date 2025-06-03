@@ -5,6 +5,7 @@
 
 from pathlib import Path
 
+import structlog
 from PySide6 import QtCore
 from PySide6.QtGui import QAction
 from PySide6.QtWidgets import QMenu, QMenuBar
@@ -12,6 +13,8 @@ from PySide6.QtWidgets import QMenu, QMenuBar
 from tagstudio.core.enums import ShowFilepathOption
 from tagstudio.qt.platform_strings import trash_term
 from tagstudio.qt.translations import Translations
+
+logger = structlog.get_logger(__name__)
 
 
 class MainMenuBar(QMenuBar):
@@ -353,3 +356,36 @@ class MainMenuBar(QMenuBar):
             self.open_recent_library_menu.addAction(clear_recent_action)
         else:
             self.open_recent_library_menu.setDisabled(True)
+
+    def set_select_actions_visibility(self, on_selection: bool, on_selected: bool):
+        if not self.add_tag_to_selected_action:
+            return
+
+        self.select_all_action.setEnabled(on_selection)
+        self.select_inverse_action.setEnabled(on_selection)
+
+        self.add_tag_to_selected_action.setEnabled(on_selected)
+        self.clear_select_action.setEnabled(on_selected)
+        self.delete_file_action.setEnabled(on_selected)
+
+    def set_clipboard_menu_viability(self, copy: bool, paste: bool):
+        self.copy_fields_action.setEnabled(copy)
+        self.paste_fields_action.setEnabled(paste)
+
+    def set_library_actions_visibility(self, visible: bool):
+        try:
+            self.save_library_backup_action.setEnabled(visible)
+            self.close_library_action.setEnabled(visible)
+            self.refresh_dir_action.setEnabled(visible)
+            self.tag_manager_action.setEnabled(visible)
+            self.color_manager_action.setEnabled(visible)
+            self.manage_file_ext_action.setEnabled(visible)
+            self.new_tag_action.setEnabled(visible)
+            self.fix_unlinked_entries_action.setEnabled(visible)
+            self.fix_dupe_files_action.setEnabled(visible)
+            self.clear_thumb_cache_action.setEnabled(visible)
+            self.folders_to_tags_action.setEnabled(visible)
+        except AttributeError:
+            logger.warning(
+                "[Library] Could not disable library management menu actions. Is this in a test?"
+            )
