@@ -24,7 +24,7 @@ find_package(Python3 REQUIRED COMPONENTS Interpreter)
 # Install base Python modules (PySide is needed to configure CMake).
 python_pip_install(setuptools packaging Pyinstaller==6.6.0 cmakelang)
 # We only check for the version now because the script needs the 'packaging' module to work.
-python_query_config(__PYVER "pyproj" "version")
+python_check_version()
 
 if(NOT DEFINED PYSIDE_WHEELS)
     # For self-built PySide6, you may use the "create_wheels.py" script to create packages.

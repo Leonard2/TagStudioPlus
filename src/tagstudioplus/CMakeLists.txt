@@ -1,7 +1,5 @@
 project(TagStudioPlus)
 
-include(${CMAKE_SOURCE_DIR}/cmake/PythonCMakeConfig.cmake)
-
 
 set(QT_COMPONENTS Core Gui Widgets)
 

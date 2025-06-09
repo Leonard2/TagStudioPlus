@@ -1,7 +1,7 @@
 # Inspired from: https://doc.qt.io/qtforpython-6/examples/example_scriptableapplication_scriptableapplication.html
 
 
-function(python_query_config resultVar option)
+function(__python_query_config resultVar option)
     list(POP_FRONT ARGV)
     execute_process(
         COMMAND "${Python3_EXECUTABLE}" "${CMAKE_SOURCE_DIR}/cmake/python_cmake_config.py" ${ARGV}
@@ -11,7 +11,64 @@ function(python_query_config resultVar option)
         COMMAND_ECHO STDOUT
         COMMAND_ERROR_IS_FATAL ANY)
 
-    list(TRANSFORM ${resultVar} REPLACE "\\\\" "/")
+    return(PROPAGATE ${resultVar})
+endfunction()
+
+function(python_check_version)
+    __python_query_config(__DISCARDED "pyproj" "version")
+endfunction()
+
+function(__python_get_dependencies resultVar)
+    cmake_parse_arguments(PARSE_ARGV 1
+        "arg"
+        "DEV"
+        "INCLUDE;EXCLUDE"
+        "")
+
+    set(__CACHE_VAR "__CMAKE_PYENV_DEPENDENCIES")
+    if(arg_DEV)
+        unset(arg_DEV)
+        set(arg_DEV "dev")
+        set(__CACHE_VAR "__CMAKE_PYENV_DEV_DEPENDENCIES")
+    else()
+        set(arg_DEV "")
+    endif()
+
+    if(DEFINED CACHE{${__CACHE_VAR}})
+        set(${resultVar} ${${__CACHE_VAR}})
+    else()
+        __python_query_config(${resultVar} "pyproj" "${arg_DEV}deps")
+        list(TRANSFORM ${resultVar} TOLOWER)
+        set(${__CACHE_VAR} "${${resultVar}}" CACHE INTERNAL "")
+    endif()
+
+    if(DEFINED arg_INCLUDE)
+        string(TOLOWER ${arg_INCLUDE} arg_INCLUDE)
+        string(APPEND ${arg_INCLUDE} "*")
+        list(FILTER ${resultVar} INCLUDE REGEX ${arg_INCLUDE})
+    elseif(DEFINED arg_EXCLUDE)
+        string(TOLOWER ${arg_EXCLUDE} arg_EXCLUDE)
+        string(APPEND ${arg_EXCLUDE} "*")
+        list(FILTER ${resultVar} EXCLUDE REGEX ${arg_EXCLUDE})
+    endif()
+    
+    list(LENGTH ${resultVar} __LIST_LENGTH)
+    if(NOT __LIST_LENGTH GREATER_EQUAL 1)
+        message(FATAL_ERROR "Error while parsing project's requirements")
+    endif()
+
+    return(PROPAGATE ${resultVar})
+endfunction()
+
+function(python_get_dependencies resultVar)
+    list(POP_FRONT ARGV)
+    __python_get_dependencies(${resultVar} ${ARGV})
+    return(PROPAGATE ${resultVar})
+endfunction()
+
+function(python_get_dev_dependencies resultVar)
+    list(POP_FRONT ARGV)
+    __python_get_dependencies(${resultVar} "DEV" ${ARGV})
     return(PROPAGATE ${resultVar})
 endfunction()
 
@@ -22,9 +79,17 @@ function(python_pip_install)
         COMMAND_ERROR_IS_FATAL ANY)
 endfunction()
 
+function(python_create_venv envpath)
+    execute_process(
+        COMMAND "${Python3_EXECUTABLE}" -m venv "${envpath}" --copies
+        COMMAND_ECHO STDOUT
+        COMMAND_ERROR_IS_FATAL ANY)
+endfunction()
+
 
 macro(module_target nicename module)
-    python_query_config(MODULE_PATH_${nicename} "module" "${module}")
+    __python_query_config(MODULE_PATH_${nicename} "module" "${module}")
+    list(TRANSFORM MODULE_PATH_${nicename} REPLACE "\\\\" "/")
 
     set(MODULE_NAME_${nicename} "${module}")
 endmacro()
